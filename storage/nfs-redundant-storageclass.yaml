@@ -5,7 +5,7 @@ metadata:
 provisioner: nfs.csi.k8s.io
 parameters:
   server: pve-r720-01.katralis.net
-  share: /zfs-hdd/kube-store
+  share: /zfs-hdd/kube-data
 reclaimPolicy: Retain
 volumeBindingMode: Immediate
 mountOptions:
