@@ -15,11 +15,16 @@ extraArgs:
   # Never manage A/AAAA records
   - --managed-record-types=CNAME
   - --managed-record-types=TXT
-  
+  # Using traefik for ingress  
   - --ingress-class=traefik
+  # Set DNS Server with DNS Name, so that underlying IPs can change
+  # While avoiding headaches
   - --rfc2136-host=dns01.katralis.net
   - --rfc2136-port=53
   - --rfc2136-zone=katralis.net
+  # AXFR retrieves records and only updates if new records exist.
+  # If AXFR is disabled, external-dns adds all records every time
+  - --rfc2136-axfr
   - --rfc2136-tsig-secret-alg=hmac-sha256
 
 env:
