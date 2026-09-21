@@ -1,0 +1,39 @@
+isources:
+  - ingress
+
+domainFilters:
+  - katralis.net
+
+policy: upsert-only
+
+registry: txt
+txtOwnerId: k3s
+
+extraArgs:
+  # Only touch explicitly opted-in Ingresses
+  - --annotation-filter=external-dns.kubernetes.io/enabled=true
+  # Never manage A/AAAA records
+  - --managed-record-types=CNAME
+  - --managed-record-types=TXT
+  
+  - --ingress-class=traefik
+  - --rfc2136-host=dns01.katralis.net
+  - --rfc2136-port=53
+  - --rfc2136-zone=katralis.net
+  - --rfc2136-tsig-secret-alg=hmac-sha256
+
+env:
+  - name: EXTERNAL_DNS_RFC2136_TSIG_KEYNAME
+    valueFrom:
+      secretKeyRef:
+        name: rfc2136-keys
+        key: rfc2136-tsig-keyname
+
+  - name: EXTERNAL_DNS_RFC2136_TSIG_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: rfc2136-keys
+        key: rfc2136-tsig-secret
+
+provider:
+  name: rfc2136
