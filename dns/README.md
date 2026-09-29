@@ -23,6 +23,7 @@ kubectl -n external-dns create secret generic rfc2136-keys \
   --from-literal=rfc2136-tsig-keyname='kubernetes-external-dns' \
   --from-literal=rfc2136-tsig-secret=$TECHNITIUM_SECRET
 ```
+Before setting up external-dns, we must first enable the 
 ## 3. Add External-DNS helm repo
 ```
 helm repo add external-dns \

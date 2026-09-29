@@ -4,7 +4,14 @@ isources:
 domainFilters:
   - katralis.net
 
-policy: upsert-only
+# upser-only allows only adding DNS records
+# sync allows deletion
+policy: sync
+# Increase sync interval to ensure we are not spamming DNS server
+# Default interval is 1 min
+# Enable syncing on event to ensure changes and deployments propagate quickly
+interval: 1h
+triggerLoopOnEvent: true
 
 registry: txt
 txtOwnerId: k3s
@@ -26,6 +33,10 @@ extraArgs:
   # If AXFR is disabled, external-dns adds all records every time
   - --rfc2136-axfr
   - --rfc2136-tsig-secret-alg=hmac-sha256
+  # Optional: Increase time interval between event and sync to avoid flooding server with requests
+  # - --min-event-sync-interval=30s
+  # Optional: Set time to cache DNS records for (avoids additional AXFR requests)
+  # - --provider-cache-time=0s
 
 env:
   - name: EXTERNAL_DNS_RFC2136_TSIG_KEYNAME
