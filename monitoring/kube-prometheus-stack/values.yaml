@@ -1,0 +1,77 @@
+# values.yaml
+# kube-prometheus-stack configuration for the homelab
+
+grafana:
+  enabled: true
+
+  # Credentials come from a Kubernetes Secret rather than this file.
+  admin:
+    existingSecret: grafana-admin
+    userKey: admin-user
+    passwordKey: admin-password
+
+  persistence:
+    enabled: true
+    type: pvc
+    storageClassName: nfs-rust
+    accessModes:
+      - ReadWriteOnce
+    size: 5Gi
+
+  service:
+    type: ClusterIP
+
+  # We'll add ingress later once Grafana itself is working.
+  ingress:
+    enabled: false
+
+
+prometheus:
+  enabled: true
+  service:
+    type: ClusterIP
+  prometheusSpec:
+    # Keep up to 30 days, but don't allow Prometheus to consume
+    # more than ~40 GB of its 50 GB volume.
+    retention: 30d
+    retentionSize: 40GB
+
+    # Allow our custom Technitium and Proxmox ServiceMonitors
+    # to be discovered later.
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: nfs-rust
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 50Gi
+
+
+alertmanager:
+  enabled: true
+
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: nfs-rust
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 2Gi
+
+
+# Kubernetes object/state monitoring
+kubeStateMetrics:
+  enabled: true
+
+
+# One node-exporter per k3s node
+nodeExporter:
+  enabled: true
