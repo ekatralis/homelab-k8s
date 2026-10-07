@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: technitium-exporter
+  namespace: monitoring
+  labels:
+    app: technitium-exporter
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: technitium-exporter
+
+  template:
+    metadata:
+      labels:
+        app: technitium-exporter
+    spec:
+      containers:
+        - name: technitium-exporter
+          image: ghcr.io/guycalledseven/technitium-dns-prometheus-exporter:latest
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - name: metrics
+              containerPort: 9105
+              protocol: TCP
+
+          env:
+            - name: TECHNITIUM_BASE_URL
+              value: "http://dns01.katralis.net:5380"
+
+            - name: TECHNITIUM_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: technitium-exporter
+                  key: token
+
+            - name: TECHNITIUM_VERIFY_SSL
+              value: "true"
+
+            - name: TECHNITIUM_STATS_RANGE
+              value: "LastHour"
+
+            - name: TECHNITIUM_TOP_LIMIT
+              value: "50"
+
+            - name: SERVER_LABEL
+              value: "technitium"
+
+            - name: EXPORTER_PORT
+              value: "9105"
+
+            - name: LOG_LEVEL
+              value: "INFO"
+
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 5
+            periodSeconds: 15
+
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 15
+            periodSeconds: 30
+
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: technitium-exporter
+  namespace: monitoring
+  labels:
+    app: technitium-exporter
+spec:
+  type: ClusterIP
+
+  selector:
+    app: technitium-exporter
+
+  ports:
+    - name: metrics
+      port: 9105
+      targetPort: metrics
+      protocol: TCP
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: technitium-exporter
+  namespace: monitoring
+  labels:
+    app: technitium-exporter
+spec:
+  selector:
+    matchLabels:
+      app: technitium-exporter
+
+  namespaceSelector:
+    matchNames:
+      - monitoring
+
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 15s
